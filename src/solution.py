@@ -13,17 +13,17 @@ if __name__ == '__main__':
     wind_dir = np.load('/app/data/wind_dir.npy')
     wind_speed = np.load('/app/data/wind_speed.npy')
 
-    print('Speed start')
+    print('Speed Prediction')
     wind_speed_forecast = make_all_forecast_speed(wind_speed)
-    print('clouds start')
+    print('Clouds Prediction')
     clouds_forecast = make_all_forecast_clouds(clouds)
-    print('humidity start')
+    print('Humidity Prediction')
     humidity_forecast = make_all_forecast_clouds(humidity)
-    print('tempreture start')
+    print('Tempreture Prediction')
     tempreture_forecast = make_all_forecast_temps(tempreture)
-    print('pressure start')
+    print('Pressure Prediction')
     pressure_forecast = make_all_forecast_pressure(pressure)
-    wind_dir_forecast = [14 for _ in range(4500)]
+    wind_dir_forecast = np.array([14 for _ in range(4500)])
 
     solution = np.stack([
         tempreture_forecast.reshape(-1),
@@ -34,4 +34,4 @@ if __name__ == '__main__':
         clouds_forecast.reshape(-1),
     ], axis=1)
     solution = pd.DataFrame(solution, columns=['temperature', 'pressure', 'humidity', 'wind_speed', 'wind_dir', 'cloud_cover'])
-    solution.to_csv('/app/solution.csv', index_label='ID')
+    solution.to_csv('/app/solution/solution.csv', index_label='ID')
