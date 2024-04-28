@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
-from prediction import (make_all_forecast_clouds, make_all_forecast_humidity,
-                        make_all_forecast_pressure, make_all_forecast_speed, make_all_forecast_temps)
+from prediction import make_all_forecast
 
 
 if __name__ == '__main__':
@@ -14,15 +13,15 @@ if __name__ == '__main__':
     wind_speed = np.load('/app/data/wind_speed.npy')
 
     print('Speed Prediction')
-    wind_speed_forecast = make_all_forecast_speed(wind_speed)
+    wind_speed_forecast = np.array([7.5 for _ in range(4500)])
     print('Clouds Prediction')
-    clouds_forecast = make_all_forecast_clouds(clouds)
+    clouds_forecast = make_all_forecast(clouds, 'clouds')
     print('Humidity Prediction')
-    humidity_forecast = make_all_forecast_clouds(humidity)
+    humidity_forecast = make_all_forecast(humidity, 'humidity')
     print('Tempreture Prediction')
-    tempreture_forecast = make_all_forecast_temps(tempreture)
+    tempreture_forecast = make_all_forecast(tempreture, 'tempreture')
     print('Pressure Prediction')
-    pressure_forecast = make_all_forecast_pressure(pressure)
+    pressure_forecast = make_all_forecast(pressure, 'pressure')
     wind_dir_forecast = np.array([14 for _ in range(4500)])
 
     solution = np.stack([

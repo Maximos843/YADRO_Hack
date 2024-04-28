@@ -43,26 +43,16 @@ def create_df_wind_speed(wind_speed: np.array, n: list[tuple], hour: int, coord:
 
 
 def create_df_clouds(clouds: np.array, n: list[tuple], hour: int, coord: tuple) -> tuple:
-    df = pd.DataFrame(data=[['0/0', h + 1] + [clouds[h][coord[0]][coord[1]]] + [clouds[h][i[0]][i[1]] for i in n] + [clouds[h][i[0]][i[1]] for i in n]
-         + [clouds[h][i[0]][i[1]] for i in n] + [clouds[h][i[0]][i[1]] for i in n] for h in range(43 + hour - 1)],
-                    columns=['unique_id', 'ds', 'y', 'neibr1_cloud', 'neibr2_cloud', 'neibr3_cloud', 'neibr4_cloud', 'neibr5_cloud', 'neibr6_cloud',
-                            'neibr7_cloud', 'neibr8_cloud', 'neibr1_cloud_shift2', 'neibr2_cloud_shift2', 'neibr3_cloud_shift2', 'neibr4_cloud_shift2',
-                             'neibr5_cloud_shift2', 'neibr6_cloud_shift2', 'neibr7_cloud_shift2', 'neibr8_cloud_shift2',
-                             'neibr1_cloud_shift3', 'neibr2_cloud_shift3', 'neibr3_cloud_shift3', 'neibr4_cloud_shift3',
-                             'neibr5_cloud_shift3', 'neibr6_cloud_shift3', 'neibr7_cloud_shift3', 'neibr8_cloud_shift3',
-                             'neibr1_cloud_shift4', 'neibr2_cloud_shift4', 'neibr3_cloud_shift4', 'neibr4_cloud_shift4',
-                             'neibr5_cloud_shift4', 'neibr6_cloud_shift4', 'neibr7_cloud_shift4', 'neibr8_cloud_shift4',])
+    df = pd.DataFrame(data=[['0/0', h + 1] + [clouds[h][coord[0]][coord[1]]]
+                            + [clouds[h][i[0]][i[1]] for i in n] + [clouds[h][i[0]][i[1]] for i in n] for h in range(43 + hour - 1)],
+                    columns=['unique_id', 'ds', 'y'] +  [f'neibr{i + 1}_cloud' for i in range(24)] + [f'neibr{i + 1}_cloud_shift2' for i in range(24)])
     df['y'] = double_exponential_smoothing(df.y, 0.3, 0.2)
     future_df = df.iloc[[-1], :].copy()
     future_df['ds'] = 43 + hour
-    for col in df.columns[3:11]:
-        df[col] = df[col].shift(1)
-    for col in df.columns[11:19]:
-        df[col] = df[col].shift(2)
-    for col in df.columns[19:27]:
-        df[col] = df[col].shift(3)
-    for col in df.columns[27:]:
-        df[col] = df[col].shift(4)
+    for i in df.columns[3:3+24]:
+        df[i] = df[i].shift(1)
+    for i in df.columns[3+24:3+24*2]:
+        df[i] = df[i].shift(2)
     return df, future_df
 
 
@@ -109,7 +99,7 @@ def double_exponential_smoothing(series: pd.Series, alpha: float, beta: float) -
     return result[:-1]
 
 
-def get_neibrs(row: int, col: int) -> list[tuple]:
+def get_nine_neibrs(row: int, col: int) -> list[tuple]:
     if row == 0 and col == 0:
         n = [(0, 1), (1, 0), (1, 1), (2, 1), (2, 2), (1, 2), (2, 0), (0, 2)]
     elif row == 29 and col == 0:
@@ -129,3 +119,23 @@ def get_neibrs(row: int, col: int) -> list[tuple]:
     else:
         n = [(row - 1, col - 1), (row - 1, col), (row - 1, col + 1), (row, col - 1), (row, col + 1), (row + 1, col - 1), (row + 1, col), (row + 1, col + 1)]
     return n
+
+
+def distance(point1: int, point2: int) -> float:
+    return ((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2) ** 0.5
+
+
+def get_twenty_four_closest_neighbors(target: tuple[int]) -> list[tuple[int]]:
+    coordinates = [(i, j) for i in range(30) for j in range(30)]
+    neighbors = []
+    min_neighbors = [(0, 0)] + [(0, 0)] * 24
+    min_distances = [float('inf')] + [float('inf')] * 24
+    for coord in coordinates:
+        dist = distance(coord, target)
+        if dist < max(min_distances):
+            idx = min_distances.index(max(min_distances))
+            min_distances[idx] = dist
+            min_neighbors[idx] = coord
+    for i in range(24):
+        neighbors.append(min_neighbors[i])
+    return sorted(neighbors, key=lambda x: (x[0] - target[0]) ** 2 + (x[1] - target[1]) ** 2)
